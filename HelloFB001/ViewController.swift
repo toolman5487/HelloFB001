@@ -56,7 +56,15 @@ class ViewController: UIViewController {
                     item.downloadURL { url, error in
                         let imageView = UIImageView()
                         imageView.sd_setImage(with: url) { _, _, _, _ in
-                            <#code#>
+                            self.imageViews.append(imageView)
+                            if self.imageViews.count == 1{
+                                self.currentIndex = 0
+                                self.theImageView.image = self.imageViews[0].image
+                                self.nextBtn.isEnabled = false
+                            }else{
+                                self.nextBtn.isEnabled = true
+                            }
+                            print("Count: \(self.imageViews.count)")
                         }
                     }
                 }
@@ -73,6 +81,10 @@ class ViewController: UIViewController {
     }
     
     @IBAction func nextPic(_ sender: Any) {
+        nextBtn.setTitle("目前為第\(currentIndex + 1)張,共\(imageViews.count)張", for: .normal)
+        currentIndex += 1
+        currentIndex %= imageViews.count
+        theImageView.image = imageViews[currentIndex].image
         
     }
     
