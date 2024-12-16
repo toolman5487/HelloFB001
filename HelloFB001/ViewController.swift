@@ -53,31 +53,50 @@ class ViewController: UIViewController {
             
             if let items = result?.items{
                 for item in items {
-                    item.downloadURL { url, error in
-                        let imageView = UIImageView()
-                        imageView.sd_setImage(with: url) { _, _, _, _ in
-                            self.imageViews.append(imageView)
-                            if self.imageViews.count == 1{
-                                self.currentIndex = 0
-                                self.theImageView.image = self.imageViews[0].image
-                                self.nextBtn.isEnabled = false
-                            }else{
-                                self.nextBtn.isEnabled = true
+                    
+                    item.getMetadata { metaData, error in
+                        if let error = error {
+                            print("ERRORXXX \(error.localizedDescription)")
+                            return
+                        }
+                        print("AAAsize: \(metaData?.size)")
+                        print("AAAmyKey: \(metaData?.customMetadata?["myKey"])")
+                        
+                        if metaData?.customMetadata?["myKey"] == "myFile"{
+                            item.downloadURL { url, error in
+                                let imageView = UIImageView()
+                                imageView.sd_setImage(with: url) { _, _, _, _ in
+                                    self.imageViews.append(imageView)
+                                    self.nextBtn.setTitle("目前為第\(self.currentIndex + 1)張,共\(self.imageViews.count)張", for: .normal)
+                                    
+                                    if self.imageViews.count == 1{
+                                        self.currentIndex = 0
+                                        self.theImageView.image = self.imageViews[0].image
+                                        self.nextBtn.isEnabled = false
+                                    }else{
+                                        self.nextBtn.isEnabled = true
+                                    }
+                                    print("Count: \(self.imageViews.count)")
+                                }
                             }
-                            print("Count: \(self.imageViews.count)")
                         }
                     }
                 }
             }
             
-//            print("Name: \(result?.items[0].name)")
-//            if let ref = result?.items[0]{
-//                ref.downloadURL { url, error in
-//                    self.theImageView.sd_setImage(with: url)
-//                }
-//            }
+            //            print("Name: \(result?.items[0].name)")
+            //            if let ref = result?.items[0]{
+            //                ref.downloadURL { url, error in
+            //                    self.theImageView.sd_setImage(with: url)
+            //                }
+            //            }
             
         }
+    }
+    @IBAction func selectPic(_ sender: Any) {
+        let vc = UIImagePickerController()
+        vc.delegate = self
+        present(vc, animated: true)
     }
     
     @IBAction func nextPic(_ sender: Any) {
@@ -88,7 +107,7 @@ class ViewController: UIViewController {
         
     }
     
-
+    
     @IBAction func signInOut(_ sender: Any) {
         if auth.currentUser == nil{
             auth.signInAnonymously()
@@ -108,3 +127,32 @@ class ViewController: UIViewController {
     
 }
 
+extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate{
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        if let image = info[.originalImage] as? UIImage{
+            theImageView.image = image
+            let alert = UIAlertController(title: nil, message: "是否上傳照片", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "取消", style: .cancel, handler: { action in
+                self.theImageView.image = self.imageViews[self.currentIndex].image
+            }))
+            alert.addAction(UIAlertAction(title: "確認", style: .default, handler: { action in
+                if let data = image.jpegData(compressionQuality: 0.5){
+                    let newRef = self.ref.child("test001").child("\(UUID()).jpg")
+                    let metaData = StorageMetadata()
+                    metaData.customMetadata = ["myKey":"myFile"]
+                    newRef.putData(data,metadata: metaData){ _, _ in
+                        self.reLoadPicture()
+                        
+                    }
+                }
+            }))
+            DispatchQueue.main.async {
+                self.present(alert, animated: true)
+            }
+        }
+        picker.dismiss(animated: true)
+    }
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+}
