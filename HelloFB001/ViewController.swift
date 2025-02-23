@@ -23,14 +23,11 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         reLoadPicture()
+        stateChangeListener()
         
-        //        Auth.auth().signInAnonymously { results, error in
-        //            if let error = error{
-        //                print(error.localizedDescription)
-        //            }else{
-        //                print(results?.user.uid)
-        //            }
-        //        }
+        
+    }
+    func stateChangeListener(){
         auth.addStateDidChangeListener { auth, user in
             if user == nil{
                 self.signInButton.setTitle("Sign In", for: .normal)
@@ -39,7 +36,6 @@ class ViewController: UIViewController {
                 print("Signed In:\(user!.uid)")
             }
         }
-        
     }
     
     func reLoadPicture(){
@@ -83,16 +79,9 @@ class ViewController: UIViewController {
                     }
                 }
             }
-            
-            //            print("Name: \(result?.items[0].name)")
-            //            if let ref = result?.items[0]{
-            //                ref.downloadURL { url, error in
-            //                    self.theImageView.sd_setImage(with: url)
-            //                }
-            //            }
-            
         }
     }
+    
     @IBAction func selectPic(_ sender: Any) {
         let vc = UIImagePickerController()
         vc.delegate = self
@@ -115,13 +104,6 @@ class ViewController: UIViewController {
             auth.currentUser?.delete(completion: { error in
                 print(error?.localizedDescription)
             })
-            //            do{
-            //                try auth.signOut()
-            //            }catch{
-            //                print(error.localizedDescription)
-            //            }
-            //            signInButton.setTitle("Sign Out", for: .normal)
-            //            print("Signed In:\(auth.currentUser?.uid)")
         }
     }
     
